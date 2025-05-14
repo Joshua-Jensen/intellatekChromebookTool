@@ -3,7 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"regexp"
+	"runtime"
+	"strings"
+	"time"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -11,6 +15,7 @@ import (
 type envVariables struct {
 	path     string
 	fileName string
+	sheetNames []string
 }
 
 func main() {
@@ -24,16 +29,62 @@ func main() {
 	fmt.Println("")
 	if _, err := os.Stat(env.path); os.IsNotExist(err) {
 		file := excelize.NewFile()
+		
+	}else{
+		file := excelize.OpenFile(env.path)
+		if err != nil {
+			fmt.Println("Error opening file:", err)
+			return
+		}
 	}
+	for _, sheetName := range env.sheetNames {
+		message := fmt.Sprintf("Creating sheet: %s", sheetName)
+		fmt.Println(message)
+		if err := file.NewSheet(sheetName); err != nil {
+			fmt.Println("Error creating sheet:", err)
+			return
+		}
+	}
+
+// scan in each chromebook by room
+var newRoom string
+fmt.Println("enter room number")
+fmt.Scanln(&newRoom)
+
+
 }
 
 func setupEnv() envVariables {
 	var env envVariables
+	var sheetStr string
 	fmt.Println("enter file path")
 	fmt.Scanln(&env.path)
 	re := regexp.MustCompile(`\\`)
 	env.path = re.ReplaceAllString(env.path, "/")
 	fmt.Println("enter file name")
 	fmt.Scanln(&env.fileName)
+	fmt.Println("enter sheet names (comma separated)")
+	fmt.Scanln(&sheetStr)
+	env.sheetNames = strings.Split(sheetStr, ",")
+	fmt.Println("env variables set")
+	fmt.Println("clear terminal")
+	time.Sleep(1 * time.Second)
+	clearTerminal()
 	return env
 }
+
+
+
+
+
+func clearTerminal() {
+		var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", "cls")
+	cmd.Stdout = os.Stdout
+	} else{
+	fmt.Print("\033[H\033[2J")
+	}
+	_ = cmd.Run()
+}
+
