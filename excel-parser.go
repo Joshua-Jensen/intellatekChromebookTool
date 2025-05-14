@@ -2,7 +2,10 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"regexp"
+
+	"github.com/xuri/excelize/v2"
 )
 
 type envVariables struct {
@@ -19,7 +22,9 @@ func main() {
 	env = <-envChan
 
 	fmt.Println("")
-
+	if _, err := os.Stat(env.path); os.IsNotExist(err) {
+		file := excelize.NewFile()
+	}
 }
 
 func setupEnv() envVariables {
