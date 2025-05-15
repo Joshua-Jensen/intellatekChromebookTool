@@ -6,16 +6,15 @@ import (
 	"os/exec"
 	"regexp"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/xuri/excelize/v2"
 )
 
 type envVariables struct {
-	path       string
-	fileName   string
-	sheetNames []string
+	path     string
+	fileName string
+	// sheetNames []string
 }
 
 type roomItem struct {
@@ -29,6 +28,8 @@ type chromebookItem struct {
 }
 
 func main() {
+
+	//wait for the user to enter the env variables
 	var env envVariables
 	envChan := make(chan envVariables)
 	go func() {
@@ -36,77 +37,45 @@ func main() {
 	}()
 	env = <-envChan
 
-	// create file if it doesn't exist
-	var file *excelize.File
-	fmt.Println("")
-	if _, err := os.Stat(env.path); os.IsNotExist(err) {
-		file = excelize.NewFile()
 
-	} else {
-		file, err = excelize.OpenFile(env.path)
-		if err != nil {
-			fmt.Println("Error opening file:", err)
-			return
-		}
-	}
-	for _, sheetName := range env.sheetNames {
-		message := fmt.Sprintf("Creating sheet: %s", sheetName)
-		fmt.Println(message)
-		_, err := file.NewSheet(sheetName)
-		if err != nil {
-			fmt.Println("Error creating sheet:", err)
-			return
-		}
-	}
-	_, err := file.NewSheet("breakdown by room")
-	if err != nil {
-		fmt.Println("Error creating sheet:", err)
-	}
+//create a new file
+	fmt.Println("creating new file")
+	file := excelize.NewFile()
 
-	// scan in each chromebook by room
-	var newRoom string
-	fmt.Println("enter room number")
-	fmt.Scanln(&newRoom)
-	fmt.Println("entered room number: ", newRoom)
-	var loop bool = true
-	var roomList roomItem
-	roomList.roomNumber = newRoom
-	var rowNum int = 1
-	for loop {
-		var newChromebook chromebookItem
-		fmt.Println("enter chromebook serial number")
-		fmt.Scanln(&newChromebook.sn)
-		fmt.Println("entered chromebook serial number: ", newChromebook.sn)
-		fmt.Println("enter chromebook asset tag")
-		fmt.Scanln(&newChromebook.assetTag)
-		fmt.Println("entered chromebook asset tag: ", newChromebook.assetTag)
-		roomList.roomContents = append(roomList.roomContents, newChromebook)
-		excelize.CoordinatesToCellName()
-		file.SetCellValue()
-
-	}
+	createNewRoomSheet(file, env.fileName)
 
 }
 
+
+// this function sets up the env variables
 func setupEnv() envVariables {
 	var env envVariables
-	var sheetStr string
+	// var sheetStr string
 	fmt.Println("enter file path")
 	fmt.Scanln(&env.path)
 	re := regexp.MustCompile(`\\`)
 	env.path = re.ReplaceAllString(env.path, "/")
 	fmt.Println("enter file name")
-	fmt.Scanln(&env.fileName)
-	fmt.Println("enter sheet names (comma separated)")
-	fmt.Scanln(&sheetStr)
-	env.sheetNames = strings.Split(sheetStr, ",")
+	// fmt.Scanln(&env.fileName)
+	// fmt.Println("enter sheet names (comma separated)")
+	// fmt.Scanln(&sheetStr)
+	// // env.sheetNames = strings.Split(sheetStr, ",")
 	fmt.Println("env variables set")
 	fmt.Println("clear terminal")
 	time.Sleep(1 * time.Second)
-	clearTerminal()
+	// clearTerminal()
 	return env
 }
 
+
+
+
+
+
+
+
+//this function clears the terminal
+//unused while testing
 func clearTerminal() {
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
@@ -116,4 +85,68 @@ func clearTerminal() {
 		fmt.Print("\033[H\033[2J")
 	}
 	_ = cmd.Run()
+}
+
+
+
+
+
+
+
+
+
+
+
+// this function takes int he file and the env,path and creates a new sheet for each room with its contents
+func createNewRoomSheet(file *excelize.File, path string) {
+	// scan in each chromebook by room
+	var newRoom string
+	fmt.Println("enter room number")
+	fmt.Scanln(&newRoom)
+	fmt.Println("entered room number: ", newRoom)
+	//create new sheet for this room
+	_, err := file.NewSheet(newRoom)
+	if err != nil {
+		fmt.Println("Error creating sheet:", err)
+	}
+
+	//collect the data on the chromebooks
+	var loop bool = true
+	var roomList roomItem
+	roomList.roomNumber = newRoom
+	for loop {
+		var escapeString string = "exit"
+		var newChromebook chromebookItem
+		fmt.Println("enter chromebook serial number")
+		fmt.Scanln(&newChromebook.sn)
+		if newChromebook.sn != escapeString {
+			fmt.Println("entered chromebook serial number: ", newChromebook.sn)
+			fmt.Println("enter chromebook asset tag")
+			fmt.Scanln(&newChromebook.assetTag)
+			fmt.Println("entered chromebook asset tag: ", newChromebook.assetTag)
+			roomList.roomContents = append(roomList.roomContents, newChromebook)
+		}else{
+			loop = false
+		}
+	}
+	// Write room data to the sheet
+	rowIndex := 2 // Start writing from the eighth row
+	for _, chromebook := range roomList.roomContents {
+		rowData := []interface{}{"", chromebook.sn, chromebook.assetTag, "", "", "", "", "", "", roomList.roomNumber, "", "", "", "", ""}
+		err := file.SetSheetRow(roomList.roomNumber, fmt.Sprintf("A%d", rowIndex), &rowData)
+		if err != nil {
+			fmt.Println("Error writing to sheet:", err)
+			return
+		}
+		rowIndex++
+	}
+
+	// Save the file
+	err = file.SaveAs("test.xlsx")
+	if err != nil {
+		fmt.Println("Error saving file:", err)
+		return
+	}
+	fmt.Println("Data successfully written to file.")
+
 }
