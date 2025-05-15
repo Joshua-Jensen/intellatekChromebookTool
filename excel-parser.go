@@ -19,16 +19,14 @@ type envVariables struct {
 }
 
 type roomItem struct {
-	roomNumber string
+	roomNumber   string
 	roomContents []chromebookItem
-	
 }
 
-
 type chromebookItem struct {
-	sn string
+	sn       string
 	assetTag string
-	}
+}
 
 func main() {
 	var env envVariables
@@ -38,7 +36,6 @@ func main() {
 	}()
 	env = <-envChan
 
-
 	// create file if it doesn't exist
 	var file *excelize.File
 	fmt.Println("")
@@ -46,25 +43,25 @@ func main() {
 		file = excelize.NewFile()
 
 	} else {
-		file,err = excelize.OpenFile(env.path)
-			if err != nil {
-				fmt.Println("Error opening file:", err)
-				return
-			}
+		file, err = excelize.OpenFile(env.path)
+		if err != nil {
+			fmt.Println("Error opening file:", err)
+			return
+		}
 	}
 	for _, sheetName := range env.sheetNames {
 		message := fmt.Sprintf("Creating sheet: %s", sheetName)
 		fmt.Println(message)
-		_,err := file.NewSheet(sheetName)
-			if err != nil {
-				fmt.Println("Error creating sheet:", err)
-				return
-			}
-		}
-		_,err := file.NewSheet("breakdown by room")
+		_, err := file.NewSheet(sheetName)
 		if err != nil {
 			fmt.Println("Error creating sheet:", err)
+			return
 		}
+	}
+	_, err := file.NewSheet("breakdown by room")
+	if err != nil {
+		fmt.Println("Error creating sheet:", err)
+	}
 
 	// scan in each chromebook by room
 	var newRoom string
@@ -72,20 +69,24 @@ func main() {
 	fmt.Scanln(&newRoom)
 	fmt.Println("entered room number: ", newRoom)
 	var loop bool = true
-	
-
+	var roomList roomItem
+	roomList.roomNumber = newRoom
+	var rowNum int = 1
 	for loop {
+		var newChromebook chromebookItem
+		fmt.Println("enter chromebook serial number")
+		fmt.Scanln(&newChromebook.sn)
+		fmt.Println("entered chromebook serial number: ", newChromebook.sn)
+		fmt.Println("enter chromebook asset tag")
+		fmt.Scanln(&newChromebook.assetTag)
+		fmt.Println("entered chromebook asset tag: ", newChromebook.assetTag)
+		roomList.roomContents = append(roomList.roomContents, newChromebook)
+		excelize.CoordinatesToCellName()
+		file.SetCellValue()
 
 	}
 
 }
-
-
-
-
-
-
-
 
 func setupEnv() envVariables {
 	var env envVariables
