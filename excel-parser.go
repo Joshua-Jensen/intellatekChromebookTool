@@ -37,15 +37,13 @@ func main() {
 	}()
 	env = <-envChan
 
-
-//create a new file
+	//create a new file
 	fmt.Println("creating new file")
 	file := excelize.NewFile()
 
 	createNewRoomSheet(file, env.fileName)
 
 }
-
 
 // this function sets up the env variables
 func setupEnv() envVariables {
@@ -67,15 +65,8 @@ func setupEnv() envVariables {
 	return env
 }
 
-
-
-
-
-
-
-
-//this function clears the terminal
-//unused while testing
+// this function clears the terminal
+// unused while testing
 func clearTerminal() {
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
@@ -86,16 +77,6 @@ func clearTerminal() {
 	}
 	_ = cmd.Run()
 }
-
-
-
-
-
-
-
-
-
-
 
 // this function takes int he file and the env,path and creates a new sheet for each room with its contents
 func createNewRoomSheet(file *excelize.File, path string) {
@@ -125,7 +106,7 @@ func createNewRoomSheet(file *excelize.File, path string) {
 			fmt.Scanln(&newChromebook.assetTag)
 			fmt.Println("entered chromebook asset tag: ", newChromebook.assetTag)
 			roomList.roomContents = append(roomList.roomContents, newChromebook)
-		}else{
+		} else {
 			loop = false
 		}
 	}
