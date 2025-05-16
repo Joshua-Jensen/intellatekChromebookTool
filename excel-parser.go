@@ -56,6 +56,7 @@ func setupEnv() envVariables {
 	// var sheetStr string
 	fmt.Println("enter file path")
 	fmt.Scanln(&env.path)
+	env.path = `"`+ env.path + `"`
 	re := regexp.MustCompile(`\\`)
 	env.path = re.ReplaceAllString(env.path, "/")
 	fmt.Println("enter file name")
