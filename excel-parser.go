@@ -40,7 +40,7 @@ func main() {
 	//create a new file
 	fmt.Println("creating new file")
 	file := excelize.NewFile()
-	var path string = env.path + "/" + env.fileName + ".xlsx"
+	var path string = `"`+ env.path + "/" + env.fileName + ".xlsx" + `"`
 	createNewRoomSheet(file, path)
 	println("all done")
 }
