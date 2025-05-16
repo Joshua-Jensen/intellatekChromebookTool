@@ -40,10 +40,14 @@ func main() {
 	//create a new file
 	fmt.Println("creating new file")
 	file := excelize.NewFile()
-
-	createNewRoomSheet(file, env.fileName)
-
+	var path string = env.path + "/" + env.fileName + ".xlsx"
+	createNewRoomSheet(file, path)
+	println("all done")
 }
+
+
+
+
 
 // this function sets up the env variables
 func setupEnv() envVariables {
@@ -54,16 +58,20 @@ func setupEnv() envVariables {
 	re := regexp.MustCompile(`\\`)
 	env.path = re.ReplaceAllString(env.path, "/")
 	fmt.Println("enter file name")
-	// fmt.Scanln(&env.fileName)
+	fmt.Scanln(&env.fileName)
 	// fmt.Println("enter sheet names (comma separated)")
 	// fmt.Scanln(&sheetStr)
-	// // env.sheetNames = strings.Split(sheetStr, ",")
+	// env.sheetNames = strings.Split(sheetStr, ",")
 	fmt.Println("env variables set")
 	fmt.Println("clear terminal")
 	time.Sleep(1 * time.Second)
 	// clearTerminal()
 	return env
 }
+
+
+
+
 
 // this function clears the terminal
 // unused while testing
@@ -78,18 +86,39 @@ func clearTerminal() {
 	_ = cmd.Run()
 }
 
-// this function takes int he file and the env,path and creates a new sheet for each room with its contents
+
+
+
+
 func createNewRoomSheet(file *excelize.File, path string) {
-	// scan in each chromebook by room
+	var loop bool = true
+	var exitString string = "done"
 	var newRoom string
-	fmt.Println("enter room number")
-	fmt.Scanln(&newRoom)
-	fmt.Println("entered room number: ", newRoom)
-	//create new sheet for this room
-	_, err := file.NewSheet(newRoom)
-	if err != nil {
-		fmt.Println("Error creating sheet:", err)
+	for loop {
+		fmt.Println("enter room number")
+		fmt.Scanln(&newRoom)
+		if newRoom != exitString {
+			fmt.Println("entered room number: ", newRoom)
+			//create new sheet for this room
+			_, err := file.NewSheet(newRoom)
+			if err != nil {
+				fmt.Println("Error creating sheet:", err)
+			}
+			createRoomContents(file, newRoom, path)
+		}else{
+			loop = false
+		}
 	}
+}
+
+
+
+
+
+
+// this function takes int he file and the env,path and creates a new sheet for each room with its contents
+func createRoomContents(file *excelize.File, newRoom string, path string) {
+	// scan in each chromebook by room
 
 	//collect the data on the chromebooks
 	var loop bool = true
@@ -97,6 +126,7 @@ func createNewRoomSheet(file *excelize.File, path string) {
 	roomList.roomNumber = newRoom
 	for loop {
 		var escapeString string = "exit"
+		// var newRoomString string = "done"
 		var newChromebook chromebookItem
 		fmt.Println("enter chromebook serial number")
 		fmt.Scanln(&newChromebook.sn)
@@ -123,11 +153,23 @@ func createNewRoomSheet(file *excelize.File, path string) {
 	}
 
 	// Save the file
-	err = file.SaveAs("test.xlsx")
+	saveFile(file, path)
+
+}
+
+
+
+
+
+
+
+
+func saveFile(file *excelize.File, path string) {
+	// Save the file to the specified path
+	err := file.SaveAs(path)
 	if err != nil {
 		fmt.Println("Error saving file:", err)
 		return
 	}
-	fmt.Println("Data successfully written to file.")
-
+	fmt.Println("File saved successfully at", path)
 }
