@@ -26,6 +26,7 @@ type roomItem struct {
 
 type chromebookItem struct {
 	// sn       string
+	// sn       string
 	assetTag string
 	comments string
 	slotNum  string
@@ -42,6 +43,21 @@ func main() {
 	env = <-envChan
 
 	//create a new file
+	var path string = env.path + "/" + env.fileName + ".xlsx"
+	var file *excelize.File
+	_, err := os.Stat(path)
+	if err == nil {
+		file, err = excelize.OpenFile(path)
+		if err != nil {
+			fmt.Println(err)
+		}
+	} else if errors.Is(err, os.ErrNotExist) {
+		fmt.Println("creating new file")
+		file = excelize.NewFile()
+	} else {
+		fmt.Println("err ocurred", err)
+	}
+
 	var path string = env.path + "/" + env.fileName + ".xlsx"
 	var file *excelize.File
 	_, err := os.Stat(path)
@@ -119,6 +135,7 @@ func createNewRoomSheet(file *excelize.File, path string) {
 			}
 			createRoomContents(file, newRoom, path)
 		} else {
+		} else {
 			loop = false
 		}
 	}
@@ -176,6 +193,7 @@ func createRoomContents(file *excelize.File, newRoom string, path string) {
 		}
 	}
 	// Write room data to the sheet
+	rowIndex := 2 // Start writing from the second row
 	rowIndex := 2 // Start writing from the second row
 	for _, chromebook := range roomList.roomContents {
 		rowData := []interface{}{"", chromebook.assetTag, chromebook.comments, chromebook.slotNum, "", "", "", "", roomList.roomNumber, "", "", "", "", ""}
