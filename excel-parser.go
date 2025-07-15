@@ -134,8 +134,7 @@ func createNewRoomSheet(file *excelize.File, path string) {
 				fmt.Println("Error creating sheet:", err)
 			}
 			createRoomContents(file, newRoom, path)
-		} else {
-		} else {
+		}  else {
 			loop = false
 		}
 	}
